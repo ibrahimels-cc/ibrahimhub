@@ -7,8 +7,17 @@ import { GoogleGenAI, Type } from "@google/genai";
 // Safely access env var to prevent crash on static hosts
 const getApiKey = () => {
   try {
-    return process.env.API_KEY || '';
+    // Check standard process
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      return process.env.API_KEY;
+    }
+    // Check window.process polyfill explicitly
+    if (typeof window !== 'undefined' && (window as any).process && (window as any).process.env && (window as any).process.env.API_KEY) {
+      return (window as any).process.env.API_KEY;
+    }
+    return '';
   } catch (e) {
+    console.warn("Could not retrieve API KEY from env");
     return '';
   }
 };
