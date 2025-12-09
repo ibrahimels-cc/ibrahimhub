@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Babel Standalone for in-browser compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       :root {
         --bg-dark: #050505;
@@ -589,6 +591,7 @@
     <div id="root">
       <div id="loading-text">Loading Neural Network...</div>
     </div>
-    <script type="module" src="./index.tsx"></script>
+    <!-- Updated to use Babel text/babel type for on-the-fly compilation -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
   </body>
 </html>
