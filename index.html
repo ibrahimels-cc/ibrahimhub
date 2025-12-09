@@ -8,8 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <!-- Babel Standalone for in-browser compilation -->
+    
+    <!-- 1. Load React Globally (More stable than imports for standalone) -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    
+    <!-- 2. Load Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
       :root {
         --bg-dark: #050505;
@@ -21,11 +27,7 @@
         --grid-color: rgba(0, 243, 255, 0.05);
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
         background-color: var(--bg-dark);
@@ -33,7 +35,6 @@
         font-family: 'Cairo', sans-serif;
         overflow-x: hidden;
         min-height: 100vh;
-        /* Advanced Cyber Grid */
         background-image: 
           linear-gradient(var(--grid-color) 1px, transparent 1px),
           linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
@@ -41,557 +42,404 @@
         background-position: center top;
       }
       
-      /* Error Container Styling */
+      /* Error Container */
       #error-container {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: #000;
-        color: #ff3333;
-        z-index: 10000;
-        padding: 20px;
-        font-family: monospace;
-        white-space: pre-wrap;
-        overflow: auto;
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #000; color: #ff3333; z-index: 10000; padding: 20px;
+        font-family: monospace; white-space: pre-wrap; overflow: auto;
       }
       
-      /* Loading State Styling */
+      /* Loading */
       #loading-text {
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        color: var(--neon-blue);
-        font-family: 'Orbitron', sans-serif;
-        font-size: 1.2rem;
-        letter-spacing: 2px;
-        animation: pulse 1.5s infinite;
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        color: var(--neon-blue); font-family: 'Orbitron', sans-serif;
+        font-size: 1.2rem; letter-spacing: 2px; animation: pulse 1.5s infinite;
       }
-      
       @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-      /* CRT Scanline Effect */
+      /* Visual Effects */
       body::before {
-        content: " ";
-        display: block;
-        position: fixed;
-        top: 0; left: 0; bottom: 0; right: 0;
+        content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
         background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        z-index: 9999;
-        background-size: 100% 2px, 3px 100%;
-        pointer-events: none;
+        z-index: 9999; background-size: 100% 2px, 3px 100%; pointer-events: none;
       }
-
-      /* Vignette */
       body::after {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
+        content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: radial-gradient(circle at center, transparent 40%, #000 110%);
-        pointer-events: none;
-        z-index: -1;
+        pointer-events: none; z-index: -1;
       }
 
-      h1, h2, h3, h4 {
-        font-family: 'Cairo', sans-serif;
-      }
-      
-      .en-font {
-        font-family: 'Orbitron', sans-serif;
-      }
+      h1, h2, h3, h4 { font-family: 'Cairo', sans-serif; }
+      .en-font { font-family: 'Orbitron', sans-serif; }
 
       /* Scrollbar */
       ::-webkit-scrollbar { width: 8px; }
       ::-webkit-scrollbar-track { background: #020202; }
       ::-webkit-scrollbar-thumb { background: var(--neon-purple); border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
 
       /* Animations */
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-      }
+      @keyframes star-move { from { transform: translateY(0px); } to { transform: translateY(-2000px); } }
+      .glow-text { text-shadow: 0 0 15px var(--neon-blue); }
+      .glow-text-purple { text-shadow: 0 0 15px var(--neon-purple); }
 
-      @keyframes glow-pulse {
-        0% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
-        50% { box-shadow: 0 0 25px rgba(0, 243, 255, 0.7); }
-        100% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
-      }
-
-      @keyframes star-move {
-        from { transform: translateY(0px); }
-        to { transform: translateY(-2000px); }
-      }
-      
-      @keyframes glitch {
-        0% { transform: translate(0); }
-        20% { transform: translate(-2px, 2px); }
-        40% { transform: translate(-2px, -2px); }
-        60% { transform: translate(2px, 2px); }
-        80% { transform: translate(2px, -2px); }
-        100% { transform: translate(0); }
-      }
-
-      .glow-text { text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue); }
-      .glow-text-purple { text-shadow: 0 0 15px var(--neon-purple), 0 0 30px var(--neon-purple); }
-
-      /* Cyberpunk Buttons */
+      /* Buttons */
       .btn-neon {
-        position: relative;
-        background: rgba(0, 243, 255, 0.05);
-        color: var(--neon-blue);
-        padding: 14px 35px;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 1rem;
-        letter-spacing: 1px;
-        transition: 0.3s;
-        /* Cyberpunk Shape */
+        position: relative; background: rgba(0, 243, 255, 0.05); color: var(--neon-blue);
+        padding: 14px 35px; border: none; cursor: pointer; font-weight: bold;
+        font-size: 1rem; letter-spacing: 1px; transition: 0.3s;
         clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-        text-transform: uppercase;
         font-family: 'Orbitron', 'Cairo', sans-serif;
       }
-      
-      html[dir="rtl"] .btn-neon {
-           clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-      }
-      
-      .btn-neon::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        box-shadow: inset 0 0 0 2px var(--neon-blue);
-        clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-        z-index: -1;
-        transition: 0.3s;
-      }
+      html[dir="rtl"] .btn-neon { clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
+      .btn-neon:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 30px var(--neon-blue); }
+      .btn-neon-purple { color: var(--neon-purple); background: rgba(188, 19, 254, 0.05); }
+      .btn-neon-purple:hover { background: var(--neon-purple); color: #fff; box-shadow: 0 0 30px var(--neon-purple); }
 
-      .btn-neon:hover {
-        background: var(--neon-blue);
-        color: #000;
-        text-shadow: none;
-        box-shadow: 0 0 30px var(--neon-blue);
-      }
-      
-      .btn-neon-purple {
-        color: var(--neon-purple);
-        background: rgba(188, 19, 254, 0.05);
-      }
-      .btn-neon-purple::before {
-        box-shadow: inset 0 0 0 2px var(--neon-purple);
-      }
-      .btn-neon-purple:hover {
-        background: var(--neon-purple);
-        color: #fff;
-        box-shadow: 0 0 30px var(--neon-purple);
-      }
-
-      /* Advanced Cards */
+      /* Cards */
       .glass-card {
         background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        transition: all 0.4s ease;
-        position: relative;
-        overflow: hidden;
+        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;
+        transition: all 0.4s ease; position: relative; overflow: hidden;
       }
-      
-      .glass-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: -100%;
-        width: 100%; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-        transition: 0.5s;
-      }
-      html[dir="rtl"] .glass-card::before { left: 100%; right: auto; background: linear-gradient(-90deg, transparent, rgba(255,255,255,0.1), transparent); }
-      html[dir="rtl"] .glass-card:hover::before { left: -100%; }
-      html[dir="ltr"] .glass-card:hover::before { left: 100%; }
+      .glass-card:hover { transform: translateY(-8px); border-color: rgba(0, 243, 255, 0.4); box-shadow: 0 10px 40px -10px rgba(0, 243, 255, 0.2); }
 
-      .glass-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(0, 243, 255, 0.4);
-        box-shadow: 0 10px 40px -10px rgba(0, 243, 255, 0.2);
+      /* Input */
+      .cyber-input {
+        width: 100%; padding: 15px; margin-bottom: 20px;
+        background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; border-radius: 8px; outline: none; transition:0.3s;
       }
+      .cyber-input:focus { border-color: #00eaff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
 
-      /* About Section Styles */
-      .stat-box {
-        text-align: center;
-        padding: 20px;
-        background: rgba(0, 243, 255, 0.03);
-        border-radius: 15px;
-        border: 1px solid rgba(0, 243, 255, 0.1);
-        transition: 0.3s;
-      }
-      .stat-box:hover {
-        background: rgba(0, 243, 255, 0.1);
-        transform: scale(1.05);
-      }
-      .stat-number {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: var(--neon-blue);
-      }
-
-      .skill-bar-container {
-        margin-bottom: 20px;
-      }
-      .skill-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-        color: #ccc;
-      }
-      .skill-track {
-        width: 100%;
-        height: 8px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 4px;
-        overflow: hidden;
-      }
-      .skill-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue));
-        border-radius: 4px;
-        box-shadow: 0 0 10px var(--neon-blue);
-      }
-      html[dir="rtl"] .skill-fill {
-         background: linear-gradient(-90deg, var(--neon-purple), var(--neon-blue));
-      }
-
-      .timeline {
-        position: relative;
-        padding-right: 30px; /* For RTL */
-        border-right: 2px solid rgba(255, 255, 255, 0.1);
-      }
-      html[dir="ltr"] .timeline {
-        padding-right: 0;
-        padding-left: 30px;
-        border-right: none;
-        border-left: 2px solid rgba(255, 255, 255, 0.1);
-      }
-      .timeline-item {
-        position: relative;
-        margin-bottom: 40px;
-      }
-      .timeline-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: -36px; /* RTL adjust */
-        width: 14px;
-        height: 14px;
-        background: var(--bg-dark);
-        border: 2px solid var(--neon-purple);
-        border-radius: 50%;
-        box-shadow: 0 0 10px var(--neon-purple);
-      }
-      html[dir="ltr"] .timeline-item::before {
-        right: auto;
-        left: -36px;
-      }
-      .timeline-date {
-        color: var(--neon-blue);
-        font-family: 'Orbitron', sans-serif;
-        font-weight: bold;
-        margin-bottom: 5px;
-      }
-
-      /* Utilities */
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      .fade-in { animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      /* HERO SECTION IMAGES */
-      .avatar-container {
-        position: relative;
-        width: 250px;
-        height: 250px;
-        margin-bottom: 50px;
-        z-index: 2;
-      }
-
-      .avatar-glow {
-        position: absolute;
-        inset: -10px;
-        background: conic-gradient(from 0deg, var(--neon-blue), var(--neon-purple), var(--neon-blue));
-        border-radius: 50%;
-        filter: blur(25px);
-        opacity: 0.8;
-        animation: spin 4s linear infinite;
-      }
-      
-      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-      .avatar-frame {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: #000;
-        border: 3px solid rgba(255,255,255,0.1);
-        overflow: hidden;
-        z-index: 2;
-      }
-
-      .avatar-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-      }
-
-      .avatar-container:hover .avatar-img { transform: scale(1.15); }
-
-      .hero-bg-image {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        object-fit: cover;
-        opacity: 0.2;
-        z-index: -1;
-        mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
-        -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
-        pointer-events: none;
-      }
-      
-      /* Glitch Title Effect */
-      .glitch-title {
-        position: relative;
-        font-size: 4rem;
-        font-weight: 900;
-        color: #fff;
-        letter-spacing: 5px;
-        text-transform: uppercase;
-        font-family: 'Orbitron', sans-serif;
-        text-shadow: 2px 2px var(--neon-purple), -2px -2px var(--neon-blue);
-        direction: ltr; 
-        unicode-bidi: isolate;
-      }
-
-      /* Floating Navbar */
-      .floating-nav {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 1000px;
-        height: 70px;
-        background: rgba(10, 10, 15, 0.7);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 50px;
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        transition: 0.3s;
-      }
-      
-      .floating-nav:hover {
-        border-color: rgba(0, 243, 255, 0.3);
-        box-shadow: 0 10px 40px rgba(0, 243, 255, 0.15);
-      }
-
-      .logo {
-        font-family: 'Orbitron', sans-serif;
-        font-weight: 900;
-        font-size: 1.5rem;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        direction: ltr !important; 
-        unicode-bidi: isolate;
-      }
-      .logo span { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-
-      /* Desktop Nav */
-      .desktop-nav { display: none; gap: 10px; }
-
-      .nav-link {
-        color: var(--text-gray);
-        text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 600;
-        padding: 8px 16px;
-        border-radius: 20px;
-        transition: 0.3s;
-        cursor: pointer;
-      }
-
-      .nav-link:hover, .nav-link.active {
-        color: #fff;
-        background: rgba(255,255,255,0.1);
-        text-shadow: 0 0 5px #fff;
-      }
-
-      /* Mobile Nav Toggle */
-      .mobile-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        z-index: 1100;
-        background: rgba(255,255,255,0.05);
-        border-radius: 50%;
-        transition: 0.3s;
-      }
-      .mobile-toggle:hover { background: rgba(0, 243, 255, 0.2); }
-
-      /* Mobile Sidebar & Overlay - FIXED Z-INDEX and RTL */
+      /* Mobile Nav Fixes */
       .mobile-sidebar {
-        position: fixed;
-        top: 0; right: 0;
-        width: 280px;
-        height: 100vh;
-        background: rgba(5, 5, 8, 0.98);
-        border-left: 1px solid rgba(0, 243, 255, 0.2);
-        box-shadow: -20px 0 50px rgba(0,0,0,0.8);
-        z-index: 100000; /* Increased Z-Index */
-        transform: translateX(100%);
-        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-        padding-top: 100px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        position: fixed; top: 0; right: 0; width: 280px; height: 100vh;
+        background: rgba(5, 5, 8, 0.98); border-left: 1px solid rgba(0, 243, 255, 0.2);
+        box-shadow: -20px 0 50px rgba(0,0,0,0.8); z-index: 100000;
+        transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        padding-top: 100px; display: flex; flex-direction: column; align-items: center;
       }
-      
-      html[dir="rtl"] .mobile-sidebar {
-          right: auto; left: 0;
-          transform: translateX(-100%);
-          border-left: none; border-right: 1px solid rgba(0, 243, 255, 0.2);
-      }
-      
+      html[dir="rtl"] .mobile-sidebar { right: auto; left: 0; transform: translateX(-100%); border-left: none; border-right: 1px solid rgba(0, 243, 255, 0.2); }
       .mobile-sidebar.open { transform: translateX(0); }
       html[dir="rtl"] .mobile-sidebar.open { transform: translateX(0); }
-
-      .mobile-sidebar .nav-link {
-        font-size: 1.2rem;
-        margin: 15px 0;
-        width: 80%;
-        text-align: center;
-        padding: 15px;
-        border-radius: 10px;
-        display: block; /* Ensure visibility */
-      }
-      .mobile-sidebar .nav-link.active {
-        background: var(--neon-blue);
-        color: #000;
-        box-shadow: 0 0 20px var(--neon-blue);
-      }
-
-      .overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8);
-        z-index: 99999; /* Increased Z-Index */
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s;
-        backdrop-filter: blur(5px);
-      }
+      .mobile-sidebar .nav-link { font-size: 1.2rem; margin: 15px 0; width: 80%; text-align: center; padding: 15px; display: block; }
+      .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
       .overlay.open { opacity: 1; pointer-events: auto; }
-
-      /* Responsive Breakpoints */
-      @media (min-width: 850px) {
-        .desktop-nav { display: flex; }
-        .mobile-toggle { display: none; }
-      }
-      @media (max-width: 849px) {
-        .floating-nav { width: 95%; padding: 0 20px; }
-        .glitch-title { font-size: 2.5rem; letter-spacing: 2px; }
-      }
-
-      /* Game specific styles */
-      .game-board { display: grid; gap: 10px; margin: 30px auto; }
-      .tictactoe-cell {
-        width: 80px; height: 80px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--neon-blue);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 2.5rem; cursor: pointer; transition: 0.3s;
-        border-radius: 12px;
-        box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
-      }
-      .tictactoe-cell:hover {
-        background: rgba(0, 243, 255, 0.2);
-        box-shadow: 0 0 20px var(--neon-blue);
-        transform: scale(1.05);
-      }
       
-      .puzzle-tile {
-        width: 80px; height: 80px;
-        background: rgba(188, 19, 254, 0.15);
-        border: 1px solid var(--neon-purple);
-        color: white;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; font-weight: bold; cursor: pointer;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(188, 19, 254, 0.2);
-        transition: 0.2s;
+      /* Header & Footer */
+      .floating-nav {
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 1000px; height: 70px;
+        background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
       }
-      .puzzle-tile:active { transform: scale(0.95); }
-      .puzzle-empty { background: transparent; border: 1px dashed rgba(255,255,255,0.2); box-shadow: none; }
+      .logo { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.5rem; color: #fff; direction: ltr !important; unicode-bidi: isolate; }
+      .logo span { color: var(--neon-blue); }
+      .mobile-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; cursor: pointer; background: rgba(255,255,255,0.05); border-radius: 50%; }
+      .desktop-nav { display: none; gap: 10px; }
+      .nav-link { color: var(--text-gray); text-decoration: none; font-size: 0.95rem; font-weight: 600; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+      .nav-link.active { color: #fff; background: rgba(255,255,255,0.1); }
       
-      /* 3D Riddle Card */
-      .riddle-card:hover {
-          transform: rotateX(5deg) rotateY(5deg);
-      }
+      @media (min-width: 850px) { .desktop-nav { display: flex; } .mobile-toggle { display: none; } }
+      @media (max-width: 849px) { .floating-nav { width: 95%; padding: 0 20px; } }
+      
+      /* Key Modal */
+      .key-modal { position: fixed; top:0; left:0; width:100%; height:100%; z-index:200000; background:#000; display:flex; align-items:center; justify-content:center; padding:20px; }
     </style>
+    
+  <!-- 3. Import Map for GenAI -->
   <script type="importmap">
 {
   "imports": {
+    "@google/genai": "https://esm.run/@google/genai",
     "react": "https://aistudiocdn.com/react@^19.2.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
   }
 }
 </script>
-<script>
-  // Global Error Handler for Black Screen debugging
-  window.onerror = function(message, source, lineno, colno, error) {
-    const errorContainer = document.getElementById('error-container');
-    if (errorContainer) {
-      errorContainer.style.display = 'block';
-      errorContainer.textContent += `Error: ${message}\nAt: ${source}:${lineno}:${colno}\n\n`;
-    }
-  };
 
-  // Robust Process Polyfill
-  if (typeof process === 'undefined') {
-    window.process = { env: { API_KEY: '' } };
-  } else if (!process.env) {
-    process.env = { API_KEY: '' };
-  }
-</script>
+  <script>
+    // Error Handler
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errorContainer = document.getElementById('error-container');
+      if (errorContainer) {
+        errorContainer.style.display = 'block';
+        errorContainer.textContent += `Error: ${message}\nAt: ${source}:${lineno}:${colno}\n\n`;
+      }
+    };
+  </script>
 </head>
   <body>
     <div id="error-container"></div>
     <div id="root">
       <div id="loading-text">Loading Neural Network...</div>
     </div>
-    <!-- Updated to use Babel text/babel type for on-the-fly compilation -->
-    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
+    
+    <!-- INLINE REACT APPLICATION -->
+    <script type="text/babel" data-type="module">
+import { GoogleGenAI, Type } from "@google/genai";
+
+// Access React globals
+const { useState, useEffect, useRef, useMemo } = React;
+const { createRoot } = ReactDOM;
+
+// --- API Key Management ---
+
+// 🔴🔴 هام: تم إضافة المفتاح هنا ليعمل الموقع مباشرة
+const MANUAL_KEY = "AIzaSyAk4S9cQFLTLdjh20pCOKQu6CAjO_Q2k-E"; 
+
+const getStoredKey = () => {
+    // 1. Check manual hardcoded key
+    if (MANUAL_KEY && MANUAL_KEY.length > 10) return MANUAL_KEY;
+    
+    // 2. Check LocalStorage
+    if(typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('GEMINI_API_KEY');
+        if (stored) return stored;
+    }
+    return '';
+};
+
+// Global instance holder
+let aiInstance = null;
+const getAI = () => {
+    if (aiInstance) return aiInstance;
+    const key = getStoredKey();
+    if (key) {
+        aiInstance = new GoogleGenAI({ apiKey: key });
+    }
+    return aiInstance;
+};
+
+// --- API Key Modal Component ---
+const ApiKeyModal = ({ onSave }) => {
+    const [key, setKey] = useState('');
+    return (
+        <div className="key-modal">
+            <div className="glass-card" style={{padding:'40px', maxWidth:'500px', width:'100%', textAlign:'center', border:'1px solid var(--neon-blue)'}}>
+                <h2 className="glow-text" style={{marginBottom:'20px'}}>SYSTEM ACCESS REQUIRED</h2>
+                <p style={{marginBottom:'20px', color:'#aaa'}}>
+                   لم يتم العثور على مفتاح API في الكود.<br/>
+                   من فضلك أدخل مفتاح Gemini API للمتابعة.
+                </p>
+                <input 
+                    className="cyber-input" 
+                    value={key} 
+                    onChange={e=>setKey(e.target.value)} 
+                    placeholder="Paste API Key here (starts with AIza...)" 
+                    type="password"
+                />
+                <button className="btn-neon" onClick={() => onSave(key)}>INITIALIZE SYSTEM</button>
+                <div style={{marginTop:'20px', fontSize:'0.8rem', color:'#666'}}>
+                    Key will be saved in your browser locally. <br/>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:'var(--neon-purple)'}}>Get a Key</a>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Translations ---
+const translations = {
+  ar: {
+    nav: { home: 'الرئيسية', about: 'عن المطور', services: 'الخدمات', games: 'ألعاب الذكاء', tools: 'أدوات AI', contact: 'اتصل بي' },
+    home: { subtitle: 'Full Stack Cyber-Architect', desc: 'نصمم واجهات الغد، اليوم. دمج سلس بين الذكاء الاصطناعي والإبداع البشري لبناء تجارب ويب حية تتجاوز المألوف.', btnService: 'استكشف المستقبل', btnContact: 'ابدأ المهمة' },
+    about: { title: 'عن إبراهيم', subtitle: 'مهندس الواقع الرقمي ومصمم خوارزميات', bio: 'إبراهيم، مطور برمجيات بعقلية المستقبل. متخصص في دمج خوارزميات الذكاء الاصطناعي (Gemini) داخل النسيج الرقمي للمواقع.', stats: { exp: 'سنوات ضوئية خبرة', proj: 'نظام مكتمل', client: 'شريك نجاح', code: 'سطر شيفرة' }, skillsTitle: 'الترسانة التقنية', timelineTitle: 'سجل المهام', timeline: [ { year: '2024', role: 'AI Specialist', desc: 'دمج Gemini في الأنظمة.' }, { year: '2023', role: 'Senior Developer', desc: 'بناء منصات مركزية.' } ], btnCV: 'تحميل البيانات (CV)' },
+    services: { title: 'الخدمات المتقدمة', s1: { title: 'هندسة الواجهات', desc: 'تصميم واجهات سيبرانية تفاعلية.' }, s2: { title: 'تطوير الأنظمة', desc: 'بناء تطبيقات ويب قوية.' }, s3: { title: 'الهوية الرقمية', desc: 'تصميم بصمة بصرية فريدة.' }, s4: { title: 'الأمن السيبراني', desc: 'تدريع الأنظمة للكفاءة القصوى.' } },
+    games: { title: 'منطقة المحاكاة (AI Zone)', subtitle: 'تجارب تفاعلية مدعومة بـ Gemini', back: '← العودة', loadingAI: 'جاري الاتصال...', g1: { title: 'XO المستحيلة', desc: 'تحدى الذكاء الاصطناعي', instr: 'حاول الفوز!', win: 'فزت!', lose: 'هزيمة!', draw: 'تعادل' }, g2: { title: 'Data Puzzle', desc: 'رتب البيانات.', win: 'نجاح!', shuffle: 'خلط' }, g4: { title: 'مؤلف القصص', desc: 'نسج الواقع.', genre: 'التصنيف', char: 'البطل', place: 'المكان', generate: 'توليد', placeholder: 'مثال: خيال علمي...' }, g5: { title: 'اختبار المعرفة', desc: 'تحدى عقلك.', topic: 'الموضوع', startQ: 'بدء', score: 'النقاط', next: 'التالي' }, g6: { title: 'تواصل افتراضي', desc: 'محادثة شخصيات.', select: 'اختر', characters: { hero: 'بطل', wizard: 'حكيم', robot: 'روبوت' }, send: 'إرسال', typeMsg: '...' }, g8: { title: 'ألغاز مستحيلة', desc: 'تفكير جانبي.', level: 'مستوى', yourAns: 'الجواب...', submit: 'تحقق', hint: 'تلميح', correct: 'صحيح!', wrong: 'خطأ', loading: '...' }, g9: { title: 'خمن الفيلم', desc: 'إيموجي.', new: 'جديد', reveal: 'كشف', guessPlaceholder: 'اسم الفيلم...', check: 'فحص', correct: 'صح!', wrong: 'خطأ' } },
+    tools: { title: 'أدوات ذكية', subtitle: 'تحدث مع المستقبل', copyright: '© Ibrahim Hub', chat: { title: 'المساعد', desc: 'مساعدك الشخصي.', placeholder: 'اسألني...', send: 'بث' }, builder: { title: 'منشئ المواقع', desc: 'اكتب وصف الموقع.', placeholder: 'أريد صفحة هبوط...', generate: 'توليد', preview: 'معاينة', download: 'تنزيل', code: 'كود' }, comic: { title: 'صانع القصص', desc: 'تحويل النص لصور.', placeholder: 'وصف المشهد...', generate: 'رسم', loading: 'جاري الرسم...' } },
+    contact: { title: 'اتصل بي', subtitle: 'لنبدأ العمل.', name: 'الاسم', email: 'البريد', msg: 'الرسالة', btn: 'إرسال' }
+  },
+  en: {
+    nav: { home: 'Home', about: 'About', services: 'Services', games: 'AI Games', tools: 'AI Tools', contact: 'Contact' },
+    home: { subtitle: 'Full Stack Cyber-Architect', desc: 'Designing tomorrow\'s interfaces, today. Seamlessly merging AI and human creativity.', btnService: 'Explore', btnContact: 'Start Mission' },
+    about: { title: 'About Ibrahim', subtitle: 'Digital Reality Architect', bio: 'Software developer with a futuristic mindset, specializing in embedding Gemini AI into the digital fabric.', stats: { exp: 'Years Exp', proj: 'Projects', client: 'Clients', code: 'Lines Code' }, skillsTitle: 'Tech Arsenal', timelineTitle: 'Mission Log', timeline: [ { year: '2024', role: 'AI Specialist', desc: 'Gemini Integration.' }, { year: '2023', role: 'Senior Dev', desc: 'Platform Architecture.' } ], btnCV: 'Download Data (CV)' },
+    services: { title: 'Advanced Services', s1: { title: 'UI Engineering', desc: 'Interactive cyber-interfaces.' }, s2: { title: 'System Dev', desc: 'Robust web applications.' }, s3: { title: 'Digital ID', desc: 'Unique visual fingerprint.' }, s4: { title: 'Security', desc: 'System fortification.' } },
+    games: { title: 'Simulation Zone', subtitle: 'Powered by Gemini', back: '← Back', loadingAI: 'Connecting...', g1: { title: 'Impossible XO', desc: 'Challenge AI', instr: 'Beat the machine!', win: 'You Won!', lose: 'Defeat!', draw: 'Draw' }, g2: { title: 'Data Puzzle', desc: 'Order data.', win: 'Solved!', shuffle: 'Shuffle' }, g4: { title: 'Story Weaver', desc: 'Create reality.', genre: 'Genre', char: 'Hero', place: 'Setting', generate: 'Generate', placeholder: 'e.g. Sci-Fi...' }, g5: { title: 'Knowledge Quiz', desc: 'Test database.', topic: 'Topic', startQ: 'Start', score: 'XP', next: 'Next' }, g6: { title: 'Virtual Chat', desc: 'Talk to entities.', select: 'Entity', characters: { hero: 'Hero', wizard: 'Wizard', robot: 'Robot' }, send: 'Send', typeMsg: '...' }, g8: { title: 'Impossible Riddles', desc: 'Lateral thinking.', level: 'Level', yourAns: 'Answer...', submit: 'Check', hint: 'Hint', correct: 'Correct!', wrong: 'Wrong', loading: 'Loading...' }, g9: { title: 'Guess Movie', desc: 'Emojis.', new: 'New', reveal: 'Reveal', guessPlaceholder: 'Movie title...', check: 'Check', correct: 'Correct!', wrong: 'Wrong' } },
+    tools: { title: 'Smart Tools', subtitle: 'Talk to Future', copyright: '© Ibrahim Hub', chat: { title: 'Assistant', desc: 'Your personal AI.', placeholder: 'Ask me...', send: 'Send' }, builder: { title: 'Site Builder', desc: 'Describe a site.', placeholder: 'I want a landing page...', generate: 'Generate', preview: 'Preview', download: 'Download', code: 'Code' }, comic: { title: 'Comic Maker', desc: 'Text to Visuals.', placeholder: 'Scene description...', generate: 'Draw', loading: 'Drawing...' } },
+    contact: { title: 'Contact', subtitle: 'Lets build reality.', name: 'Name', email: 'Email', msg: 'Message', btn: 'Send' }
+  }
+};
+
+// --- Icons (SVG) ---
+const Icons = {
+  Home: () => <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>,
+  Menu: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
+  X: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  Globe: () => <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>,
+  Bot: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>,
+  Layout: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>,
+  Code: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
+  PenTool: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>,
+  Cpu: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>,
+  GitHub: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>,
+  Linkedin: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>,
+  Image: () => <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+};
+
+// --- Star Background ---
+const StarBackground = () => {
+  const stars = useMemo(() => {
+    const gen = (n) => { let v = ''; for (let i = 0; i < n; i++) v += `${Math.floor(Math.random() * 2000)}px ${Math.floor(Math.random() * 2000)}px #FFF, `; return v.slice(0, -2); };
+    return { s: gen(700), m: gen(200), l: gen(100) };
+  }, []);
+  const Layer = ({ s, b, d }) => <div style={{ position: 'absolute', width: '100%', height: '100%', animation: `star-move ${d} linear infinite` }}> <div style={{ width: s, height: s, background: 'transparent', boxShadow: b, position: 'absolute' }}></div> <div style={{ width: s, height: s, background: 'transparent', boxShadow: b, position: 'absolute', top: '2000px' }}></div> </div>;
+  return <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}><Layer s={1} b={stars.s} d="150s" /><Layer s={2} b={stars.m} d="100s" /><Layer s={3} b={stars.l} d="50s" /></div>;
+};
+
+// --- Cursor Glow Effect ---
+const CursorGlow = () => {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  useEffect(() => {
+    const move = (e) => setPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', move); return () => window.removeEventListener('mousemove', move);
+  }, []);
+  return <div style={{ position: 'fixed', left: 0, top: 0, transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`, width: '0px', height: '0px', pointerEvents: 'none', zIndex: 9999, boxShadow: '0 0 120px 60px rgba(0, 243, 255, 0.15), 0 0 50px 30px rgba(188, 19, 254, 0.1)', transition: 'transform 0.05s linear' }}></div>;
+};
+
+// --- Game Logic ---
+const calculateWinner = (squares) => {
+  const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+  for (let i = 0; i < lines.length; i++) { const [a, b, c] = lines[i]; if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) return squares[a]; }
+  return null;
+};
+const minimax = (board, depth, isMaximizing) => {
+  const winner = calculateWinner(board);
+  if (winner === 'O') return 10 - depth; if (winner === 'X') return depth - 10; if (!board.includes(null)) return 0;
+  if (isMaximizing) { let bestScore = -Infinity; for (let i = 0; i < 9; i++) { if (board[i] === null) { board[i] = 'O'; bestScore = Math.max(minimax(board, depth + 1, false), bestScore); board[i] = null; } } return bestScore; } 
+  else { let bestScore = Infinity; for (let i = 0; i < 9; i++) { if (board[i] === null) { board[i] = 'X'; bestScore = Math.min(minimax(board, depth + 1, true), bestScore); board[i] = null; } } return bestScore; }
+};
+const getBestMove = (board) => {
+  let bestScore = -Infinity; let move = -1;
+  for (let i = 0; i < 9; i++) { if (board[i] === null) { board[i] = 'O'; const score = minimax(board, 0, false); board[i] = null; if (score > bestScore) { bestScore = score; move = i; } } }
+  return move;
+};
+
+const TicTacToe = ({ t }) => {
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
+  const [winner, setWinner] = useState(null);
+  const handleClick = (i) => { if (winner || board[i] || !isXNext) return; const newBoard = [...board]; newBoard[i] = 'X'; setBoard(newBoard); const win = calculateWinner(newBoard); if (win) setWinner(win); else if (!newBoard.includes(null)) setWinner('Draw'); else setIsXNext(false); };
+  useEffect(() => { if (!isXNext && !winner) { setTimeout(() => { const bestMove = getBestMove([...board]); if (bestMove !== -1) { const newBoard = [...board]; newBoard[bestMove] = 'O'; setBoard(newBoard); const win = calculateWinner(newBoard); if (win) setWinner(win); else if (!newBoard.includes(null)) setWinner('Draw'); setIsXNext(true); } }, 500); } }, [isXNext, winner, board]);
+  return <div style={{textAlign: 'center'}}><h3 className="glow-text-purple">{t.title}</h3><p style={{color: '#888', marginBottom: '15px'}}>{t.instr}</p>{winner && <div style={{fontSize: '1.5rem', color: '#00eaff', marginBottom: '10px'}}>{winner === 'Draw' ? t.draw : winner === 'X' ? t.win : t.lose}</div>}<div className="game-board" style={{gridTemplateColumns: 'repeat(3, 80px)', justifyContent: 'center'}}>{board.map((cell, i) => <div key={i} className="tictactoe-cell" onClick={() => handleClick(i)} style={{color: cell === 'X' ? '#00eaff' : '#bc13fe'}}>{cell}</div>)}</div><button className="btn-neon" onClick={() => { setBoard(Array(9).fill(null)); setIsXNext(true); setWinner(null); }}>Restart</button></div>;
+};
+
+const SlidingPuzzle = ({ t }) => {
+  const [tiles, setTiles] = useState([1, 2, 3, 4, 5, 6, 7, 8, null]);
+  const [isSolved, setIsSolved] = useState(false);
+  const shuffle = () => { let arr = [1, 2, 3, 4, 5, 6, 7, 8, null]; for (let i = 0; i < 50; i++) { const nullIdx = arr.indexOf(null); const neighbors = [nullIdx - 1, nullIdx + 1, nullIdx - 3, nullIdx + 3].filter(idx => idx >= 0 && idx < 9 && !(nullIdx % 3 === 0 && idx === nullIdx - 1) && !((nullIdx + 1) % 3 === 0 && idx === nullIdx + 1)); const swapIdx = neighbors[Math.floor(Math.random() * neighbors.length)]; [arr[nullIdx], arr[swapIdx]] = [arr[swapIdx], arr[nullIdx]]; } setTiles(arr); setIsSolved(false); };
+  const moveTile = (index) => { const emptyIndex = tiles.indexOf(null); const validMoves = [emptyIndex - 1, emptyIndex + 1, emptyIndex - 3, emptyIndex + 3]; if (emptyIndex % 3 === 0 && index === emptyIndex - 1) return; if ((emptyIndex + 1) % 3 === 0 && index === emptyIndex + 1) return; if (validMoves.includes(index)) { const newTiles = [...tiles]; [newTiles[index], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[index]]; setTiles(newTiles); if (JSON.stringify(newTiles) === JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, null])) setIsSolved(true); } };
+  return <div style={{textAlign: 'center'}}><h3 className="glow-text-purple">{t.title}</h3>{isSolved && <p style={{color: '#00eaff'}}>{t.win}</p>}<div className="game-board" style={{gridTemplateColumns: 'repeat(3, 80px)', justifyContent: 'center'}}>{tiles.map((tile, i) => <div key={i} className={`puzzle-tile ${tile === null ? 'puzzle-empty' : ''}`} onClick={() => tile !== null && moveTile(i)}>{tile}</div>)}</div><button className="btn-neon" onClick={shuffle}>{t.shuffle}</button></div>;
+};
+
+const AIStoryGame = ({ t, lang }) => {
+  const [state, setState] = useState({ genre: '', char: '', place: '', story: '', loading: false });
+  const generate = async () => { if (!state.genre || !state.char) return; setState(s => ({ ...s, loading: true, story: '' })); try { const prompt = lang === 'ar' ? `قصة قصيرة جدا عن ${state.char} في ${state.place} نوع ${state.genre}.` : `Short story about ${state.char} in ${state.place}, genre ${state.genre}.`; const res = await getAI().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }); setState(s => ({ ...s, story: res.text || '', loading: false })); } catch { setState(s => ({ ...s, loading: false })); } };
+  return <div><h3 className="glow-text-purple">{t.title}</h3><div style={{display:'grid', gap:'10px', margin:'20px 0'}}><input className="cyber-input" placeholder={t.genre} value={state.genre} onChange={e=>setState(s=>({...s, genre:e.target.value}))} /><input className="cyber-input" placeholder={t.char} value={state.char} onChange={e=>setState(s=>({...s, char:e.target.value}))} /><input className="cyber-input" placeholder={t.place} value={state.place} onChange={e=>setState(s=>({...s, place:e.target.value}))} /></div><button className="btn-neon" onClick={generate} disabled={state.loading}>{state.loading ? t.loadingAI : t.generate}</button>{state.story && <div className="glass-card" style={{marginTop:'20px', padding:'15px'}}>{state.story}</div>}</div>;
+};
+
+const AIQuizGame = ({ t, lang }) => {
+  const [topic, setTopic] = useState(''); const [quiz, setQuiz] = useState(null); const [score, setScore] = useState(0); const [loading, setLoading] = useState(false);
+  const genQuiz = async () => { setLoading(true); setQuiz(null); try { const prompt = lang === 'ar' ? `سؤال واحد اختيار من متعدد عن "${topic}".` : `One multiple choice question about "${topic}".`; const res = await getAI().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: "application/json", responseSchema: { type: Type.OBJECT, properties: { question: { type: Type.STRING }, options: { type: Type.ARRAY, items: { type: Type.STRING } }, answer: { type: Type.STRING } } } } }); setQuiz(JSON.parse(res.text || '{}')); } catch { setLoading(false); } setLoading(false); };
+  return <div><h3 className="glow-text-purple">{t.title}</h3><input className="cyber-input" placeholder={t.topic} value={topic} onChange={e=>setTopic(e.target.value)} style={{marginTop:'10px'}}/><button className="btn-neon" onClick={genQuiz} disabled={loading}>{loading ? '...' : (quiz ? t.next : t.startQ)}</button>{quiz && <div className="fade-in" style={{marginTop:'20px'}}><h4>{quiz.question}</h4><div style={{display:'grid', gap:'8px', marginTop:'10px'}}>{quiz.options.map((o, i) => <button key={i} className="glass-card" onClick={() => o === quiz.answer && setScore(s=>s+1)} style={{padding:'10px', textAlign:'right'}}>{o}</button>)}</div><p style={{marginTop:'10px', color:'#00eaff'}}>{t.score}: {score}</p></div>}</div>;
+};
+
+const AICharacterChat = ({ t, lang }) => {
+  const [msgs, setMsgs] = useState([]); const [txt, setTxt] = useState(''); const chatRef = useRef(null);
+  const start = async (role) => { setMsgs([]); let sys = `You are a ${role}.`; if (lang === 'ar') sys += " Speak Arabic."; chatRef.current = getAI().chats.create({ model: 'gemini-2.5-flash', config: { systemInstruction: sys } }); };
+  useEffect(() => { start('hero'); }, [lang]);
+  const send = async () => { if(!txt) return; setMsgs(p => [...p, {r:'user',t:txt}]); setTxt(''); try { const r = await chatRef.current.sendMessage({message:txt}); setMsgs(p => [...p, {r:'model',t:r.text}]); } catch {} };
+  return <div style={{height:'500px', display:'flex', flexDirection:'column'}}><h3 className="glow-text-purple">{t.title}</h3><div style={{display:'flex', gap:'5px', overflowX:'auto', padding:'10px 0'}}>{Object.keys(t.characters).map(k => <button key={k} className="btn-neon" style={{padding:'5px 10px', fontSize:'0.8rem'}} onClick={()=>start(k)}>{t.characters[k]}</button>)}</div><div style={{flex:1, overflowY:'auto', background:'rgba(0,0,0,0.3)', padding:'10px', borderRadius:'10px', display:'flex', flexDirection:'column', gap:'10px'}}>{msgs.map((m,i) => <div key={i} style={{alignSelf: m.r==='user'?'flex-end':'flex-start', background: m.r==='user'?'rgba(0,243,255,0.2)':'rgba(188,19,254,0.2)', padding:'8px 15px', borderRadius:'15px'}}>{m.t}</div>)}</div><div style={{marginTop:'10px', display:'flex', gap:'5px'}}><input className="cyber-input" style={{marginBottom:0}} value={txt} onChange={e=>setTxt(e.target.value)} placeholder={t.typeMsg} onKeyDown={e=>e.key==='Enter'&&send()} /><button className="btn-neon" onClick={send}>{t.send}</button></div></div>;
+};
+
+const AIRiddlesGame = ({ t, lang }) => {
+  const [level, setLevel] = useState(1); const [data, setData] = useState(null); const [guess, setGuess] = useState(''); const [status, setStatus] = useState('idle'); const [msg, setMsg] = useState('');
+  const loadRiddle = async () => { setStatus('loading'); setMsg(''); setGuess(''); setData(null); try { const prompt = lang === 'ar' ? `أنت خبير ألغاز مستحيلة. أنشئ لغزاً صعباً جداً للمستوى ${level}. رد بتنسيق JSON: {riddle: "النص", hint: "تلميح"}.` : `You are a master of impossible riddles. Level ${level}. JSON: {riddle: "text", hint: "hint"}.`; const res = await getAI().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json', responseSchema: { type: Type.OBJECT, properties: { riddle: {type: Type.STRING}, hint: {type: Type.STRING} } } } }); setData(JSON.parse(res.text || '{}')); setStatus('idle'); } catch { setStatus('idle'); } };
+  const checkAnswer = async () => { if (!guess) return; setStatus('check'); try { const prompt = `Riddle: "${data.riddle}". User answer: "${guess}". Is it correct? JSON: {correct: boolean}`; const res = await getAI().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json', responseSchema: { type: Type.OBJECT, properties: { correct: {type: Type.BOOLEAN} } } } }); const check = JSON.parse(res.text || '{}'); if (check.correct) { setMsg(t.correct); setTimeout(() => { setLevel(l => l + 1); loadRiddle(); }, 2000); } else { setMsg(t.wrong); setStatus('idle'); } } catch { setStatus('idle'); } };
+  useEffect(() => { loadRiddle(); }, []);
+  return <div style={{perspective: '1000px'}}><h3 className="glow-text-purple">{t.title}</h3><div style={{color:'#00eaff', marginBottom:'10px'}}>{t.level}: {level}</div>{status === 'loading' && <div className="glow-text">{t.loading}</div>}{data && <div className="riddle-card fade-in" style={{ transformStyle:'preserve-3d', transition:'0.6s', background:'rgba(0,0,0,0.6)', border:'2px solid var(--neon-purple)', padding:'30px', borderRadius:'15px', marginBottom:'20px', boxShadow:'0 0 30px rgba(188,19,254,0.2)' }}><p style={{fontSize:'1.3rem', lineHeight:'1.8', marginBottom:'20px'}}>{data.riddle}</p><div style={{marginBottom:'20px', fontSize:'0.9rem', color:'#aaa'}}>{t.hint}: {data.hint}</div><input className="cyber-input" value={guess} onChange={e=>setGuess(e.target.value)} placeholder={t.yourAns} onKeyDown={e=>e.key==='Enter'&&checkAnswer()} /><button className="btn-neon" onClick={checkAnswer} disabled={status==='check'}>{t.submit}</button>{msg && <div style={{marginTop:'15px', fontSize:'1.2rem', color: msg===t.correct?'#0f0':'#f00'}}>{msg}</div>}</div>}</div>;
+};
+
+const EmojiPuzzleGame = ({ t, lang }) => {
+  const [puz, setPuz] = useState(null); const [gs, setGs] = useState(''); const [msg, setMsg] = useState(''); const [loading, setLoading] = useState(false);
+  const gen = async () => { setPuz(null); setMsg(''); setGs(''); setLoading(true); try { const p = lang==='ar' ? 'اسم فيلم مشهور جداً عبر الإيموجي فقط.' : 'Famous movie name using emojis only.'; const res = await getAI().models.generateContent({ model:'gemini-2.5-flash', contents:p, config:{responseMimeType:'application/json', responseSchema:{type:Type.OBJECT, properties:{emojis:{type:Type.STRING}, answer:{type:Type.STRING}}}}}); setPuz(JSON.parse(res.text||'{}')); } catch {} setLoading(false); };
+  const check = async () => { if(!gs) return; try { const prompt = `Movie: "${puz.answer}". Guess: "${gs}". Correct? JSON {correct: boolean}`; const res = await getAI().models.generateContent({ model:'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json', responseSchema: { type: Type.OBJECT, properties: { correct: {type: Type.BOOLEAN} } } } }); const r = JSON.parse(res.text||'{}'); if(r.correct) setMsg(`${t.correct} ${puz.answer}`); else setMsg(t.wrong); } catch {} };
+  return <div style={{textAlign:'center'}}><h3 className="glow-text-purple">{t.title}</h3>{!puz ? <button className="btn-neon" onClick={gen} disabled={loading}>{loading ? '...' : t.new}</button> : <div className="fade-in"><div style={{fontSize:'3rem', margin:'20px', letterSpacing:'10px'}}>{puz.emojis}</div><input className="cyber-input" style={{width:'200px', display:'inline-block'}} value={gs} onChange={e=>setGs(e.target.value)} placeholder={t.guessPlaceholder} /><button className="btn-neon" onClick={check}>{t.check}</button>{msg && <div style={{color: msg.includes(t.correct)?'#0f0':'#f00', marginTop:'10px', fontSize:'1.1rem'}}>{msg}</div>}<div style={{marginTop:'15px'}}><button className="btn-neon btn-neon-purple" onClick={()=>setMsg(`${t.correct} ${puz.answer}`)}>{t.reveal}</button> <button className="btn-neon" onClick={gen}>{t.new}</button></div></div>}</div>;
+};
+
+const MazeGame = ({ t }) => {
+  const [pl, setPl] = useState({x:1, y:1}); const [maze, setMaze] = useState([]);
+  useEffect(() => { let m = Array(15).fill(0).map(()=>Array(15).fill(1)); const carve = (x,y) => { m[y][x]=0; const d = [[0,-2],[0,2],[-2,0],[2,0]].sort(()=>Math.random()-0.5); d.forEach(([dx,dy]) => { const nx=x+dx,ny=y+dy; if(nx>0&&nx<14&&ny>0&&ny<14&&m[ny][nx]===1) { m[y+dy/2][x+dx/2]=0; carve(nx,ny); } }); }; carve(1,1); m[13][13]=0; m[12][13]=0; setMaze(m); setPl({x:1,y:1}); }, []);
+  const move = (dx, dy) => { const nx=pl.x+dx, ny=pl.y+dy; if(maze[ny] && maze[ny][nx]===0) setPl({x:nx, y:ny}); };
+  return <div style={{textAlign:'center'}}><h3 className="glow-text-purple">{t.title}</h3><div style={{display:'grid', gridTemplateColumns:`repeat(15, 12px)`, justifyContent:'center', margin:'10px'}}>{maze.map((r,y)=>r.map((c,x)=><div key={`${x}-${y}`} style={{width:12, height:12, background: (x===pl.x&&y===pl.y)?'#00eaff':(x===13&&y===13)?'red':c===1?'#000':'#222'}} />))}</div><div style={{display:'flex', gap:'5px', justifyContent:'center'}}><button className="btn-neon" style={{padding:'5px 10px'}} onClick={()=>move(0,-1)}>↑</button><button className="btn-neon" style={{padding:'5px 10px'}} onClick={()=>move(0,1)}>↓</button><button className="btn-neon" style={{padding:'5px 10px'}} onClick={()=>move(-1,0)}>←</button><button className="btn-neon" style={{padding:'5px 10px'}} onClick={()=>move(1,0)}>→</button></div></div>;
+};
+
+const AIToolsSection = ({ lang }) => {
+  const [tool, setTool] = useState(null); const t = translations[lang].tools;
+  const ChatTool = () => { const [msgs, setMsgs] = useState([]); const [inpt, setInpt] = useState(''); const sRef = useRef(null); useEffect(() => { let sys = "You are a smart AI assistant. If asked who created you, say 'Ibrahim'."; if(lang==='ar') sys += " Speak Arabic."; sRef.current = getAI().chats.create({ model: 'gemini-2.5-flash', config: { systemInstruction: sys } }); }, []); const send = async () => { if(!inpt) return; setMsgs(p => [...p, {r:'user',t:inpt}]); setInpt(''); try { const r = await sRef.current.sendMessage({message:inpt}); setMsgs(p => [...p, {r:'model',t:r.text}]); } catch {} }; return <div style={{height:'500px', display:'flex', flexDirection:'column'}}><div style={{flex:1, overflowY:'auto', background:'rgba(0,0,0,0.3)', padding:'15px', borderRadius:'10px', display:'flex', flexDirection:'column', gap:'10px'}}>{msgs.map((m,i) => <div key={i} style={{alignSelf: m.r==='user'?'flex-start':'flex-end', background:m.r==='user'?'rgba(0,243,255,0.1)':'rgba(188,19,254,0.1)', padding:'10px', borderRadius:'10px'}}>{m.t}</div>)}</div><div style={{marginTop:'10px', display:'flex', gap:'10px'}}><input className="cyber-input" style={{marginBottom:0}} value={inpt} onChange={e=>setInpt(e.target.value)} placeholder={t.chat.placeholder} onKeyDown={e=>e.key==='Enter'&&send()} /><button className="btn-neon" onClick={send}>{t.chat.send}</button></div></div>; };
+  const BuilderTool = () => { const [p, setP] = useState(''); const [c, setC] = useState(''); const [loading, setLoading] = useState(false); const [view, setView] = useState(false); const gen = async () => { setLoading(true); setView(false); try { let sys = "Expert Frontend Dev. Generate single index.html with CSS/JS. Return ONLY HTML code."; if(lang==='ar') sys += " Content in Arabic. dir='rtl'."; const r = await getAI().models.generateContent({ model: 'gemini-2.5-flash', contents: p, config: { systemInstruction: sys } }); setC(r.text?.replace(/```html|```/g, '') || ''); setView(true); } catch {} setLoading(false); }; const dl = () => { const el = document.createElement("a"); el.href = URL.createObjectURL(new Blob([c], {type:'text/html'})); el.download="index.html"; el.click(); }; return <div><textarea className="cyber-input" rows={4} value={p} onChange={e=>setP(e.target.value)} placeholder={t.builder.placeholder} /><button className="btn-neon" onClick={gen} disabled={loading}>{loading?'Working...':t.builder.generate}</button>{c && <div className="fade-in" style={{marginTop:'20px'}}><div style={{marginBottom:'10px'}}><button className="btn-neon btn-neon-purple" onClick={()=>setView(!view)}>{view?t.builder.code:t.builder.preview}</button> <button className="btn-neon" onClick={dl}>{t.builder.download}</button></div><div style={{height:'400px', border:'1px solid var(--neon-blue)', background:'#fff'}}>{view ? <iframe srcDoc={c} style={{width:'100%', height:'100%', border:'none'}} title="p" /> : <textarea readOnly value={c} style={{width:'100%', height:'100%', background:'#111', color:'#0f0'}} />}</div></div>}</div>; };
+  const ComicTool = () => { const [prompt, setPrompt] = useState(''); const [img, setImg] = useState(''); const [loading, setLoading] = useState(false); const genComic = async () => { if(!prompt) return; setLoading(true); setImg(''); try { const finalPrompt = `comic book page style: ${prompt}. vibrant colors, highly detailed.`; const response = await getAI().models.generateContent({ model: 'gemini-2.5-flash-image', contents: { parts: [{ text: finalPrompt }] } }); if (response.candidates?.[0]?.content?.parts?.[0]?.inlineData) { setImg(`data:image/png;base64,${response.candidates[0].content.parts[0].inlineData.data}`); } } catch (e) {} setLoading(false); }; return <div><textarea className="cyber-input" rows={3} value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder={t.comic.placeholder} /><button className="btn-neon" onClick={genComic} disabled={loading}>{loading ? t.comic.loading : t.comic.generate}</button>{img && <div className="fade-in" style={{marginTop:'20px', textAlign:'center'}}><div style={{border:'4px solid #000', padding:'10px', background:'#fff', display:'inline-block'}}><img src={img} alt="Comic" style={{maxWidth:'100%', maxHeight:'500px'}} /></div></div>}</div>; };
+  
+  if(tool) return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'80px'}}><button className="btn-neon" onClick={()=>setTool(null)} style={{marginBottom:'20px'}}>← {translations[lang].games.back}</button><div className="glass-card" style={{padding:'30px'}}><h3 className="glow-text" style={{marginBottom:'20px'}}>{tool==='chat'?t.chat.title : tool==='builder'?t.builder.title : t.comic.title}</h3>{tool==='chat' && <ChatTool />}{tool==='builder' && <BuilderTool />}{tool==='comic' && <ComicTool />}</div></section>;
+  return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'100px'}}><h2 className="glow-text" style={{textAlign:'center', fontSize:'2.5rem', marginBottom:'10px'}}>{t.title}</h2><p style={{textAlign:'center', color:'#aaa', marginBottom:'50px'}}>{t.subtitle}</p><div style={{display:'flex', justifyContent:'center', gap:'30px', flexWrap:'wrap'}}><div className="glass-card" onClick={()=>setTool('chat')} style={{width:'300px', padding:'40px', textAlign:'center', cursor:'pointer'}}><div style={{color:'#00eaff', marginBottom:'20px'}}><Icons.Bot /></div><h3>{t.chat.title}</h3></div><div className="glass-card" onClick={()=>setTool('builder')} style={{width:'300px', padding:'40px', textAlign:'center', cursor:'pointer'}}><div style={{color:'#9b00ff', marginBottom:'20px'}}><Icons.Layout /></div><h3>{t.builder.title}</h3></div><div className="glass-card" onClick={()=>setTool('comic')} style={{width:'300px', padding:'40px', textAlign:'center', cursor:'pointer'}}><div style={{color:'#00eaff', marginBottom:'20px'}}><Icons.Image /></div><h3>{t.comic.title}</h3></div></div></section>;
+};
+
+const Navbar = ({ active, setActive, lang, setLang }) => {
+  const [isOpen, setIsOpen] = useState(false); const t = translations[lang].nav; const items = ['home','about','services','games','tools','contact'];
+  const handle = (id) => { setActive(id); setIsOpen(false); window.scrollTo({top:0, behavior:'smooth'}); };
+  return <><nav className="floating-nav fade-in"><div className="logo" onClick={() => handle('home')}>Ibrahim<span>Hub</span></div><div className="desktop-nav">{items.map(i => <a key={i} className={`nav-link ${active===i?'active':''}`} onClick={()=>handle(i)}>{t[i]}</a>)}<button onClick={()=>setLang(lang==='ar'?'en':'ar')} style={{background:'transparent', border:'1px solid var(--neon-blue)', color:'#fff', padding:'5px 10px', borderRadius:'20px', cursor:'pointer'}}><Icons.Globe /></button></div><div className="mobile-toggle" onClick={()=>setIsOpen(true)}><Icons.Menu /></div></nav><div className={`overlay ${isOpen?'open':''}`} onClick={()=>setIsOpen(false)}></div><div className={`mobile-sidebar ${isOpen?'open':''}`}><div style={{width:'100%', padding:'20px', textAlign:'right'}} onClick={()=>setIsOpen(false)}><Icons.X /></div><button onClick={()=>setLang(lang==='ar'?'en':'ar')} style={{background:'rgba(255,255,255,0.1)', border:'none', color:'#fff', padding:'10px 20px', borderRadius:'20px', marginBottom:'20px'}}><Icons.Globe /> {lang==='ar'?'English':'العربية'}</button>{items.map(i => <a key={i} className={`nav-link ${active===i?'active':''}`} onClick={()=>handle(i)}>{t[i]}</a>)}</div></>;
+};
+
+const HomeSection = ({ changeTab, lang }) => { const t = translations[lang].home; return <section className="container" style={{minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', position:'relative', paddingTop:'100px'}}><img src="https://images.unsplash.com/photo-1535868463750-c78d9543614f?q=80&w=1200&auto=format&fit=crop" className="hero-bg-image" alt="bg" /><div className="avatar-container fade-in"><div className="avatar-glow"></div><div className="avatar-frame"><img src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=500&auto=format&fit=crop" className="avatar-img" alt="avatar" /></div></div><div className="fade-in" style={{zIndex:2}}><h1 className="glitch-title">IBRAHIM HUB</h1><h2 style={{fontSize:'1.8rem', color:'#00eaff', marginBottom:'20px', fontFamily:'Orbitron'}}>{t.subtitle}</h2><p style={{maxWidth:'600px', fontSize:'1.1rem', lineHeight:'1.8', color:'#ccc', marginBottom:'50px', marginInline:'auto'}}>{t.desc}</p><div style={{display:'flex', gap:'20px', justifyContent:'center', flexWrap:'wrap'}}><button className="btn-neon" onClick={()=>changeTab('services')}>{t.btnService}</button><button className="btn-neon btn-neon-purple" onClick={()=>changeTab('contact')}>{t.btnContact}</button></div></div></section>; };
+const ServicesSection = ({ lang }) => { const t = translations[lang].services; const sList = [{ k: 's1', i: Icons.Layout, c: '#00eaff' }, { k: 's2', i: Icons.Code, c: '#bc13fe' }, { k: 's3', i: Icons.PenTool, c: '#00eaff' }, { k: 's4', i: Icons.Cpu, c: '#bc13fe' }]; return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'80px'}}><h2 className="glow-text-purple" style={{textAlign:'center', marginBottom:'60px', fontSize:'2.5rem'}}>{t.title}</h2><div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'30px'}}>{sList.map((s, i) => { const Icon = s.i; const data = t[s.k]; return <div key={i} className="glass-card" style={{padding:'40px'}}><div style={{color:s.c, width:'60px', height:'60px', background:'rgba(255,255,255,0.05)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:'20px'}}><Icon /></div><h3 style={{marginBottom:'15px', fontSize:'1.4rem'}}>{data.title}</h3><p style={{color:'#aaa', lineHeight:'1.6'}}>{data.desc}</p></div> })}</div></section>; };
+const AboutSection = ({ lang }) => { const t = translations[lang].about; const skills = [{ name: 'React & TS', val: 95 }, { name: 'Node.js', val: 90 }, { name: 'Gemini AI', val: 85 }]; return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'80px'}}><div className="glass-card" style={{padding:'40px', marginBottom:'40px', display:'flex', flexWrap:'wrap', alignItems:'center', gap:'40px'}}><div style={{flex:'1 1 300px'}}><h2 className="glow-text" style={{fontSize:'2.5rem', marginBottom:'10px'}}>{t.title}</h2><h4 style={{color:'#00eaff', marginBottom:'20px', fontFamily:'Orbitron'}}>{t.subtitle}</h4><p style={{lineHeight:1.8, fontSize:'1.1rem', color:'#ddd', marginBottom:'30px'}}>{t.bio}</p></div></div><div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:'20px', marginBottom:'50px'}}><div className="stat-box"><div className="stat-number">+5</div><div>{t.stats.exp}</div></div><div className="stat-box"><div className="stat-number">+50</div><div>{t.stats.proj}</div></div></div><div style={{display:'flex', flexWrap:'wrap', gap:'40px'}}><div style={{flex:'1 1 400px'}}><h3 className="glow-text-purple" style={{marginBottom:'30px'}}>{t.skillsTitle}</h3>{skills.map((s,i) => <div key={i} className="skill-bar-container"><div className="skill-header"><span>{s.name}</span><span>{s.val}%</span></div><div className="skill-track"><div className="skill-fill" style={{width:`${s.val}%`}}></div></div></div>)}</div></div></section>; };
+const GamesSection = ({ lang }) => { const [g, setG] = useState(null); const t = translations[lang].games; const games = [{id:'xo',t:t.g1.title,i:'❌'}, {id:'story',t:t.g4.title,i:'📜'}, {id:'quiz',t:t.g5.title,i:'🧠'}, {id:'chat',t:t.g6.title,i:'💬'}, {id:'maze',t:t.g7.title,i:'🌀'}, {id:'puzzle',t:t.g2.title,i:'🧩'}, {id:'riddle',t:t.g8.title,i:'🔮'}, {id:'emoji',t:t.g9.title,i:'🎬'}]; if(g) return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'100px', textAlign:'center'}}><button className="btn-neon" style={{marginBottom:'30px'}} onClick={()=>setG(null)}>{t.back}</button><div className="glass-card" style={{padding:'40px', maxWidth:'800px', margin:'0 auto'}}>{g==='xo' && <TicTacToe t={t.g1} />} {g==='story' && <AIStoryGame t={t.g4} lang={lang} />} {g==='quiz' && <AIQuizGame t={t.g5} lang={lang} />} {g==='chat' && <AICharacterChat t={t.g6} lang={lang} />} {g==='maze' && <MazeGame t={t.g7} />} {g==='puzzle' && <SlidingPuzzle t={t.g2} />} {g==='riddle' && <AIRiddlesGame t={t.g8} lang={lang} />} {g==='emoji' && <EmojiPuzzleGame t={t.g9} lang={lang} />}</div></section>; return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'100px'}}><h2 className="glow-text" style={{textAlign:'center', marginBottom:'10px', fontSize:'2.5rem'}}>{t.title}</h2><p style={{textAlign:'center', color:'#aaa', marginBottom:'50px'}}>{t.subtitle}</p><div style={{display:'flex', flexWrap:'wrap', justifyContent:'center', gap:'25px'}}>{games.map(gm => <div key={gm.id} className="glass-card" onClick={()=>setG(gm.id)} style={{width:'260px', padding:'30px', textAlign:'center', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center'}}><div style={{fontSize:'3rem', marginBottom:'15px'}}>{gm.i}</div><h4 style={{fontSize:'1.2rem'}}>{gm.t}</h4></div>)}</div></section>; };
+const ContactSection = ({ lang }) => { const t = translations[lang].contact; const [f, setF] = useState({n:'',e:'',m:''}); const send = () => { if(f.n&&f.m) window.open(`https://wa.me/qr/GUDEC6YQY7HEE1?text=Name:${f.n}%0AMsg:${f.m}`, '_blank'); }; return <section className="fade-in container" style={{paddingTop:'120px', paddingBottom:'100px', textAlign:'center'}}><h2 className="glow-text-purple" style={{marginBottom:'20px', fontSize:'2.5rem'}}>{t.title}</h2><div className="glass-card" style={{maxWidth:'600px', margin:'0 auto', padding:'50px'}}><input className="cyber-input" value={f.n} onChange={e=>setF({...f,n:e.target.value})} placeholder={t.name} /><input className="cyber-input" value={f.e} onChange={e=>setF({...f,e:e.target.value})} placeholder={t.email} /><textarea className="cyber-input" rows={5} value={f.m} onChange={e=>setF({...f,m:e.target.value})} placeholder={t.msg} /><button className="btn-neon btn-neon-purple" style={{width:'100%'}} onClick={send}>{t.btn}</button></div></section>; };
+
+const App = () => {
+  const [tab, setTab] = useState('home');
+  const [lang, setLang] = useState('ar');
+  const [hasKey, setHasKey] = useState(!!getStoredKey());
+
+  useEffect(() => { document.documentElement.dir = lang==='ar'?'rtl':'ltr'; document.documentElement.lang = lang; }, [lang]);
+
+  const saveKey = (k) => {
+      if(k && k.length > 5) {
+        localStorage.setItem('GEMINI_API_KEY', k);
+        setHasKey(true);
+        window.location.reload();
+      }
+  };
+
+  if (!hasKey) {
+      return (
+        <>
+            <StarBackground />
+            <ApiKeyModal onSave={saveKey} />
+        </>
+      );
+  }
+
+  return (
+    <>
+      <StarBackground />
+      <CursorGlow />
+      <Navbar active={tab} setActive={setTab} lang={lang} setLang={setLang} />
+      <main style={{position:'relative', zIndex:1}}>
+        {tab==='home' && <HomeSection changeTab={setTab} lang={lang} />}
+        {tab==='about' && <AboutSection lang={lang} />}
+        {tab==='services' && <ServicesSection lang={lang} />}
+        {tab==='games' && <GamesSection lang={lang} />}
+        {tab==='tools' && <AIToolsSection lang={lang} />}
+        {tab==='contact' && <ContactSection lang={lang} />}
+      </main>
+    </>
+  );
+};
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+    </script>
   </body>
 </html>
